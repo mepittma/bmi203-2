@@ -39,3 +39,16 @@ class ActiveSite:
     # Overload the __repr__ operator to make printing simpler.
     def __repr__(self):
         return self.name
+
+class Cluster:
+    """
+    A simple class for a cluster
+    """
+
+    def __init__(self,name):
+        self.name = name
+        self.sites = []
+
+    # Overload the __repr__ operator to make printing simpler.
+    def __repr__(self):
+        return self.name
