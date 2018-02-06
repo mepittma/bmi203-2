@@ -93,6 +93,7 @@ for site in active_sites:
         if (np.median(sim_dist) >= t):
             clusters[c].append(site)
             assigned = True
+            break
             #print("Assigned to cluster %r.\n" %c)
         else:
             continue
@@ -111,23 +112,39 @@ print("Here's what came out of the function: ", clustering)
 
 # Find the smallest 10% of clusters
 size_dist = []
-for cluster in clustering:
-    size_dist.append(len(cluster))
+for cluster, sites in clustering.items():
+    print("Number of sites in cluster %r: %r" %(cluster, len(sites)))
+    size_dist.append(len(sites))
 
-smalls = np.percentile(dist,10)
+#small_t = np.percentile(dist,10)
+small_t = 100
+#smalls = [cluster if len(sites) <= small_t for cluster, sites in clustering.items()]
+small_list = list([ cluster for cluster, sites in clustering.items() if len(sites) <= small_t])
+print("Clusters containing fewer than %r sites will be re-examined." %small_t)
+print("The following clusters will be re-examined: ", small_list)
 
 # Extract sites from smallest clusters
 small_sites = []
-for small in smalls:
-    small_sites.append(value(small))
+for small_c in small_list: #grabs cluster
+    for active_site in clustering[small_c]: #grabs each active site in the cluster
+         small_sites.append(active_site)
+         print("Adding ActiveSite %r to list of sites to re-run." %active_site)
 
-# Remove smallest clusters from clustering
-big_clusters = list(set(clustering)^set(smalls))
+print("List of ActiveSites to rerun: ", small_sites)
+
+# Remove smallest clusters from clustering - create new dict with only big_clusters
+big_dict = defaultdict(list,{cluster: sites for cluster, sites in clustering.items()
+             if cluster not in small_list})
+big_clusters = list(set(clustering)^set(small_list))
+
+print("Big clusters: ", big_clusters)
+print("Big dict: ", big_dict)
 
 # Rerun through sequence scan, try to reassign these active sites
-final_clustering = seq_scan(small_sites, big_clusters, t)
+final_clustering = seq_scan(small_sites, big_dict, t)
 # # # # # # # # SUBSET OF PARTITION FUNCTION # # # # # # # #
 
+# Does the __main__ function match with the .cluster function?
 #cluster_by_partitioning(active_sites)
 
 
