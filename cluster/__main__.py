@@ -142,10 +142,13 @@ print("Big dict: ", big_dict)
 
 # Rerun through sequence scan, try to reassign these active sites
 final_clustering = seq_scan(small_sites, big_dict, t)
+# Recreate as a list of lists
+final_clust_list = list([sites for cluster, sites in final_clustering.items()])
 # # # # # # # # SUBSET OF PARTITION FUNCTION # # # # # # # #
 
 # Does the __main__ function match with the .cluster function?
-#cluster_by_partitioning(active_sites)
+print("Here's what came out of native code: ", final_clust_list)
+print("Here's what came out of the function: ", cluster_by_partitioning(active_sites))
 
 
 # Read in all the active sites and hierarchically cluster them

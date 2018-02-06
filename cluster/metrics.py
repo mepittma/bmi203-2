@@ -26,11 +26,11 @@ def seq_scan(active_sites, clusters, t):
     """
     for site in active_sites:
         assigned = False
-        print("\n\nAssigning %r to a cluster..." %site.name)
+        #print("\n\nAssigning %r to a cluster..." %site.name)
 
         # try to assign to an existing cluster
         for c in clusters:
-            print("Cluster number: ",c)
+            #print("Cluster number: ",c)
 
             # Find distribution of pairwise distances between already-assigned sites to the query site
             sim_dist = []
@@ -42,17 +42,17 @@ def seq_scan(active_sites, clusters, t):
             if (np.median(sim_dist) >= t):
                 clusters[c].append(site)
                 assigned = True
-                print("Assigned to cluster %r.\n" %c)
+                #print("Assigned to cluster %r.\n" %c)
                 break
 
             else:
-                print("Site %r is too different from cluster %r." %(site, c))
+                #print("Site %r is too different from cluster %r." %(site, c))
                 continue
 
         # If the site wasn't assigned, create a new cluster with the site
         if (assigned == False):
             c = len(clusters) + 1
-            print("Creating new cluster %r.\n" %c)
+            #print("Creating new cluster %r.\n" %c)
             clusters[c].append(site)
 
     return clusters

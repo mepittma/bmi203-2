@@ -44,23 +44,28 @@ def cluster_by_partitioning(active_sites):
 
     # Find the smallest 10% of clusters
     size_dist = []
-    for cluster in clustering:
-        size_dist.append(len(cluster))
+    for cluster, sites in clustering.items():
+        size_dist.append(len(sites))
 
-    smalls = np.percentile(dist,10)
+    small_t = np.percentile(dist,10)
+    small_list = list([ cluster for cluster, sites in clustering.items() if len(sites) <= small_t])
 
     # Extract sites from smallest clusters
     small_sites = []
-    for small in smalls:
-        small_sites.append(value(small))
+    for small_c in small_list: #grabs cluster
+        for active_site in clustering[small_c]: #grabs each active site in the cluster
+             small_sites.append(active_site)
 
-    # Remove smallest clusters from clustering
-    big_clusters = list(set(clustering)^set(smalls))
+    # Remove smallest clusters from clustering - create new dict with only big_clusters
+    big_dict = defaultdict(list,{cluster: sites for cluster, sites in clustering.items()
+                 if cluster not in small_list})
 
     # Rerun through sequence scan, try to reassign these active sites
-    final_clustering = seq_scan(small_sites, big_clusters, t)
+    final_clustering = seq_scan(small_sites, big_dict, t)
+    # Recreate as a list of lists
+    final_clust_list = list([sites for cluster, sites in final_clustering.items()])
 
-    return final_clustering
+    return final_clust_list
 
 
 def cluster_hierarchically(active_sites):
