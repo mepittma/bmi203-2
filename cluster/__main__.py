@@ -147,8 +147,11 @@ final_clust_list = list([sites for cluster, sites in final_clustering.items()])
 # # # # # # # # SUBSET OF PARTITION FUNCTION # # # # # # # #
 
 # Does the __main__ function match with the .cluster function?
+clustering = cluster_by_partitioning(active_sites)
 print("Here's what came out of native code: ", final_clust_list)
-print("Here's what came out of the function: ", cluster_by_partitioning(active_sites))
+print("Here's what came out of the function: ", clustering)
 
 
-# Read in all the active sites and hierarchically cluster them
+# Assess clustering using silhouette score
+print("Silhouette score for native code: ", calc_silhouette(final_clust_list))
+print("Silhouette score for function: ", calc_silhouette(clustering))

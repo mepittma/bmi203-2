@@ -83,7 +83,7 @@ def cluster_hierarchically(active_sites):
     # Get list of names of active sites
 
 
-    # 1. Calculate pairwise similarity for active sites
+    # 1. Calculate pairwise similarity for all active sites
     mat = []
     for site_i in active_sites:
         j = []
