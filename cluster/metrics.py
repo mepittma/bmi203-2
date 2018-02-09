@@ -17,7 +17,7 @@ def calc_silhouette(clustering):
 
     # If it's just one giant cluster, return NA
     if len(clustering) == 1:
-        return "NA"
+        return 0 # Assuming we want more than one single cluster
 
     avg_sil = [] # List that will contain silhouette score for each cluster
     # Works for cluster 0, cluster 1 having some issues
@@ -160,7 +160,7 @@ def update_sim(clusters, new_cluster, sim_mat):
         for site_a in list(cluster):
             sims = [] # holds the new-cluster similarity scores for site_a
             for site_b in new_cluster:
-                print("Sites: ", site_a, " ", site_b)
+                #print("Sites: ", site_a, " ", site_b)
                 sims.append(compute_similarity(site_a, site_b)) # equals similarity between sites a and b
             avg_sim.append(sum(sims)/len(sims)) # equals average similarity between site a and all sites in new cluster
         sim_mat_row.append(sum(avg_sim)/len(avg_sim)) #equals average similarity between all sites in old cluster and all sites in new cluster
