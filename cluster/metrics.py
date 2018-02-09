@@ -23,8 +23,6 @@ def calc_silhouette(clustering):
     # Works for cluster 0, cluster 1 having some issues
     for i, cluster in enumerate(clustering):
 
-        print("\n\nCalculating silhouette score for cluster ", i, "\n")
-
         # Create copy of clustering to safely remove current cluster from separation calculation - looks right
         other_clusters = list(clustering)
         #print("Updated clustering (should be same as input): ", other_clusters)
@@ -143,86 +141,36 @@ def compute_similarity(site_a, site_b):
 
     return similarity
 
-def update_distMat(clustering):
+def update_sim(clusters, new_cluster, sim_mat):
     """
-    Input: a numpy matrix containing average distances between clusters
+    Inputs:
+    clusters: a list of old clusters to find similarities to the newly-agglomerated cluster
+    new_cluster: recently agglomerated cluster of active sites for which we are calculating new distances
+    sim_mat: a numpy matrix containing average distances between clusters - constituents of new_cluster already deleted
+
     Output: an updated matrix in which the most similar clusters from the input
     have been combined into a single cluster
     """
 
-    # Calculate the average distance between clusters
-    for cluster in clustering:
+    sim_mat_row = []
+    for cluster in clusters:
 
-        print("Cluster contents: ",cluster)
+        # calculate the average distance between this cluster and every other cluster
+        avg_sim = []
+        for site_a in list(cluster):
+            sims = [] # holds the new-cluster similarity scores for site_a
+            for site_b in new_cluster:
+                print("Sites: ", site_a, " ", site_b)
+                sims.append(compute_similarity(site_a, site_b)) # equals similarity between sites a and b
+            avg_sim.append(sum(sims)/len(sims)) # equals average similarity between site a and all sites in new cluster
+        sim_mat_row.append(sum(avg_sim)/len(avg_sim)) #equals average similarity between all sites in old cluster and all sites in new cluster
 
-def hier_silhouette(clustering):
-    """
-    This function accepts a clustering assignment (list of lists of clusters) and
-    returns a score accounting for how similar objects in a cluster are to each other
-    (cohesion) and how distant they are to other clusters (separation).
+    # Append the new similarities to the similarity matrix
+    np_row = np.array([sim_mat_row])
 
-    Adapted from https://cs.fit.edu/~pkc/classes/ml-internet/silhouette.pdf
+    # Append new column and row
+    sim_mat = np.concatenate((sim_mat,np_row), axis=0)
+    np_row = np.append(np_row,0)
 
-    Wow this is nasty! Surely there's a less complex solution?
-    """
-
-    print("\nHere's the input: ", clustering, "\n")
-
-    avg_sil = [] # List that will contain silhouette score for each cluster
-    # Works for cluster 0, cluster 1 having some issues
-    for i, cluster in enumerate(clustering):
-
-        print("\n\nCalculating silhouette score for cluster ", i, "\n")
-
-        # Create copy of clustering to safely remove current cluster from separation calculation - looks right
-        other_clusters = list(clustering)
-        print("Updated clustering (should be same as input): ", other_clusters)
-        other_clusters.pop(i)
-        print("\nUpdated other_clusters (should be all clusters but i): ", other_clusters)
-
-        # Select each point in the cluster and calculate its cohesion with all
-        # other points in the cluster
-        silhouette = []
-        for j, site_a in enumerate(cluster):
-
-            cohesion = []
-
-            # Select other sites in the cluster to calculate cohesion
-            other_sites = list(cluster)
-            other_sites.pop(j)
-
-            # If the cluster is a singleton, cohesion = 1
-            if len(other_sites) == 0:
-                cohesion.append(1)
-
-            # Looks like this is working for j = 0
-            for site_b in other_sites:
-                cohesion.append(compute_similarity(site_a, site_b))
-            avg_cohesion = sum(cohesion)/len(cohesion)
-            print("\nAverage cohesion: ", avg_cohesion, "\n")
-
-            # Calculate site_a's average distance to all other clusters - looks right if there's no overlap?
-            sep_list = []
-            for OC in other_clusters:
-                sep_holder = []
-                for site_c in OC:
-                    sep_holder.append(compute_similarity(site_a, site_c))   #site-by-site similarity
-                sep_list.append(sum(sep_holder)/len(sep_holder))            #average similarity from site to clusters
-                print("Calculated separation values - site-by-site: ", sep_holder)
-            print("Calculated separation values - averaged by cluster", sep_list,)
-
-            # Find the maximum similarity from the focal site to another cluster
-            separation = min(sep_list)
-            print("Minimum separation from other clusters: ", separation)
-
-            # Calculate the silhouette coefficient for focal site - working
-            silhouette.append((avg_cohesion - separation)/max(avg_cohesion, separation))
-            print("silhouette score for active site %r: %r\n\n" %(site_a.name, silhouette[j]))
-
-        # Calculate the average silhouette coefficient for focal cluster
-        avg_sil.append(sum(silhouette)/len(silhouette))
-        print("silhouette score for cluster %r: %r\n\n" %(i, avg_sil[i]))
-
-    # Return the average silhouette coefficient for the entire clustering
-    print("Total cluster silhouette score: ", sum(avg_sil)/len(avg_sil))
-    return sum(avg_sil)/len(avg_sil)
+    sim_mat = np.concatenate((sim_mat,np_row[:, None]), axis=1)
+    return sim_mat
