@@ -15,7 +15,9 @@ def calc_silhouette(clustering):
     Wow this is nasty! Surely there's a less complex solution?
     """
 
-    print("\nHere's the input: ", clustering, "\n")
+    # If it's just one giant cluster, return NA
+    if len(clustering) == 1:
+        return "NA"
 
     avg_sil = [] # List that will contain silhouette score for each cluster
     # Works for cluster 0, cluster 1 having some issues
@@ -25,9 +27,9 @@ def calc_silhouette(clustering):
 
         # Create copy of clustering to safely remove current cluster from separation calculation - looks right
         other_clusters = list(clustering)
-        print("Updated clustering (should be same as input): ", other_clusters)
+        #print("Updated clustering (should be same as input): ", other_clusters)
         other_clusters.pop(i)
-        print("\nUpdated other_clusters (should be all clusters but i): ", other_clusters)
+        #print("\nUpdated other_clusters (should be all clusters but i): ", other_clusters)
 
         # Select each point in the cluster and calculate its cohesion with all
         # other points in the cluster
@@ -48,7 +50,7 @@ def calc_silhouette(clustering):
             for site_b in other_sites:
                 cohesion.append(compute_similarity(site_a, site_b))
             avg_cohesion = sum(cohesion)/len(cohesion)
-            print("\nAverage cohesion: ", avg_cohesion, "\n")
+            #print("\nAverage cohesion: ", avg_cohesion, "\n")
 
             # Calculate site_a's average distance to all other clusters - looks right if there's no overlap?
             sep_list = []
@@ -57,23 +59,23 @@ def calc_silhouette(clustering):
                 for site_c in OC:
                     sep_holder.append(compute_similarity(site_a, site_c))   #site-by-site similarity
                 sep_list.append(sum(sep_holder)/len(sep_holder))            #average similarity from site to clusters
-                print("Calculated separation values - site-by-site: ", sep_holder)
-            print("Calculated separation values - averaged by cluster", sep_list,)
+                #print("Calculated separation values - site-by-site: ", sep_holder)
+            #print("Calculated separation values - averaged by cluster", sep_list,)
 
             # Find the maximum similarity from the focal site to another cluster
             separation = min(sep_list)
-            print("Minimum separation from other clusters: ", separation)
+            #print("Minimum separation from other clusters: ", separation)
 
             # Calculate the silhouette coefficient for focal site - working
             silhouette.append((avg_cohesion - separation)/max(avg_cohesion, separation))
-            print("silhouette score for active site %r: %r\n\n" %(site_a.name, silhouette[j]))
+            #print("silhouette score for active site %r: %r\n\n" %(site_a.name, silhouette[j]))
 
         # Calculate the average silhouette coefficient for focal cluster
         avg_sil.append(sum(silhouette)/len(silhouette))
-        print("silhouette score for cluster %r: %r\n\n" %(i, avg_sil[i]))
+        #print("silhouette score for cluster %r: %r\n\n" %(i, avg_sil[i]))
 
     # Return the average silhouette coefficient for the entire clustering
-    print("Total cluster silhouette score: ", sum(avg_sil)/len(avg_sil))
+    print("Total clustering silhouette score: ", sum(avg_sil)/len(avg_sil))
     return sum(avg_sil)/len(avg_sil)
 
 def seq_scan(active_sites, clusters, t):

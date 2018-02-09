@@ -122,6 +122,4 @@ while len(clusters) > 1:
     clusterings.append(clusters)
 
     print("\nInput into calc_silhouette: ", clusters)
-    #scores.append(calc_silhouette(clusters))
-
-#####BUG#### issue: list is a list of lists - how to devolve?
+    scores.append(calc_silhouette(clusters))
