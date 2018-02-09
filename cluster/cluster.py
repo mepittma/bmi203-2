@@ -131,22 +131,9 @@ def cluster_hierarchically(active_sites):
         clusters.append(new_cluster)
         clusterings.append(clusters[:]) # why does python do this to me
 
-        print("Here's the clustering being scored: ", clusters)
-
         scores.append(calc_silhouette(clusters))
 
     # Only return cluster with highest silhouette score - choosing most "divisive" (first seen with max value)
-    print("These values should be the same (length of scores and length of clustering lists): ", len(scores), len(clusterings))
     scores.index(max(scores))
-
-    print("\nScores: ", scores)
-    print ("\nIndex of highest: ", scores.index(max(scores)))
-    print("\nClustering of index 0: ", clusterings[0])
-
-    print("\n Supposedly the highest-scoring cluster: ", clusterings[scores.index(max(scores))])
-
-    # Loop through clusterings, printing indexes
-    for i, clustering in enumerate(clusterings):
-        print(i, clustering, "\n\n")
 
     return clusterings[scores.index(max(scores))]

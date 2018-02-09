@@ -73,7 +73,6 @@ def calc_silhouette(clustering):
         #print("silhouette score for cluster %r: %r\n\n" %(i, avg_sil[i]))
 
     # Return the average silhouette coefficient for the entire clustering
-    print("Total clustering silhouette score: ", sum(avg_sil)/len(avg_sil))
     return sum(avg_sil)/len(avg_sil)
 
 def seq_scan(active_sites, clusters, t):
@@ -174,3 +173,72 @@ def update_sim(clusters, new_cluster, sim_mat):
 
     sim_mat = np.concatenate((sim_mat,np_row[:, None]), axis=1)
     return sim_mat
+
+def compute_rand(active_sites, h_clust, p_clust):
+    """
+    Inputs:
+        active_sites: a list of ActiveSite instances that were clustered in two different ways
+        h_clust: clustering (list of lists of ActiveSites, where each sublist is a distinct cluster)
+        p_clust: alternative clustering of same format
+
+    Output: Rand index score indicating the similarity of the two clusterings
+    (0 indicates that the clusterings have no pairs in common; 1 indicates that the clusters are functionally the same)
+    """
+
+    # Rand index
+    # Defined here: https://en.wikipedia.org/wiki/Rand_index
+    a = 0   #The number of pairs of elements in active_sites that are in the same cluster in X and in the same cluster in Y
+    b = 0   #The number of pairs of elements in active_sites that are in different clusters in both clusterings
+    c = 0   #The number of pairs of elements in active_sites that are in the same in X but different in Y
+    d = 0   #The number of pairs of elements in active_sites that are in different clusters in X, but same in Y
+
+    # Select all pairs of elements in active site list
+    for i, site_a in enumerate(active_sites):
+
+        # Remove focal site from consideration
+        other_sites = list(active_sites)
+        other_sites.pop(i)
+
+        # For every other site in the dataset, find a,b,c, and d
+        for j, site_b in enumerate(other_sites):
+
+            h_status = ""
+            p_status = ""
+
+            # Are a and b in the same cluster in h_clust?
+            for cluster in h_clust:
+                if site_a in cluster:
+                    if site_b in cluster:
+                        h_status = "SAME"
+                    else:
+                        h_status = "DIFF"
+
+            # Are they in the same cluster in partitioning?
+            for cluster in p_clust:
+                if site_a in cluster:
+                    if site_b in cluster:
+                        p_status = "SAME"
+                    else:
+                        p_status = "DIFF"
+
+            # Determine which category (a,b,c,d) the pair belongs to
+            if h_status == "SAME":
+                if p_status == "SAME":
+                    a+=1
+                elif p_status == "DIFF":
+                    c+=1
+                else:
+                    print("Hmm this is sus")
+            elif h_status == "DIFF":
+                if p_status == "SAME":
+                    d+=1
+                elif p_status == "DIFF":
+                    b+=1
+                else:
+                    print("Hmm this is sus")
+
+    # Calculate the Rand index
+    R = (a+b)/(a+b+c+d)
+    print("Rand index (similarity of my two clusterings): ", R)
+
+    return R
