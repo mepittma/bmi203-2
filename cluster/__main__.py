@@ -1,6 +1,6 @@
 import sys
 from .io import read_active_sites, write_clustering, write_mult_clusterings
-from .cluster import cluster_by_partitioning, cluster_hierarchically
+from .cluster import cluster_by_partitioning#, cluster_hierarchically
 from .metrics import calc_silhouette, seq_scan, compute_similarity
 
 # Some quick stuff to make sure the program is called correctly
@@ -24,134 +24,104 @@ from .metrics import calc_silhouette, seq_scan, compute_similarity
 
 
 
-# # # # # # # # # # # # test simple similarity index # # # # # # # # # # # # # #
-
-from .io import read_active_site
-import os, random
-import numpy as np
+# # # # # # # # # # # # test hierarchical clustering # # # # # # # # # # # # # #
 from collections import defaultdict
+import random
+import numpy as np
 
-# Test Jaccard similiarity index on two random files
+# Read in all the active sites to cluster
 path = "/Users/student/Documents/BMI206/bmi203-2/data/"
-actsite1 = read_active_site(path + random.choice(os.listdir(path)))
-actsite2 = read_active_site(path + random.choice(os.listdir(path)))
-print("Similarity: ", (compute_similarity(actsite1, actsite2)))
-
-# Read in all the active sites and partition them
 active_sites = read_active_sites(path)
 
-# # # # # # # # SUBSET OF PARTITION FUNCTION # # # # # # # #
-# 1. Initialization - shuffle the order of active sites
-random.shuffle(active_sites)
+# Assign each site to its own cluster
+clusters = []
+sim_mat = np.zeros((len(active_sites),len(active_sites)))
+print("Dimensions of matrix: ", sim_mat.shape)
 
-# 2. Threshold assessment - calculate a prior distribution of distances, selected
-# randomly from the pairwise distances between active sites (n-squared)
-dist = []
-for i in range(0,len(active_sites) ** 2):
+for i, site_a in enumerate(active_sites):
+    clusters.append([site_a])
 
-    # select two random active sites
-    sites = random.sample(active_sites, 2)
+    # Calculate the similarity between each "cluster"
+    for j, site_b in enumerate(active_sites):
+        sim_mat[i,j] = compute_similarity(site_a, site_b)
 
-    # calculate similarity, print statements to confirm it's happening
-    sim = compute_similarity(sites[0], sites[1])
-    #print ("\nJaccard similarity between %r and %r: %r" %(sites[0].name, sites[1].name, sim))
+# Update diagonal to 0s
+np.fill_diagonal(sim_mat, 0)
 
-    # add to distribution
-    dist.append(sim)
+# Print preliminary clustering and similarity matrix - looks right I think
+print("\nInitial clusters (should be every ActiveSite for himself): ", clusters)
+print("\nInitial similarity matrix: ", sim_mat)
 
-# Print the distribution just for funsies
-test_dist = [1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000]
-print("Test threshold: ", np.percentile(test_dist,10))
+# While there are more than one clusters, iteratively add the most similar clusters
+clusterings = []
+scores = []
+while len(clusters) > 1:
 
-# calculate threshold distance value (lower 10th percentile of similarity distribution)
-# any two comparisons below this similarity score will be considered "too distant" to cluster together
-t = np.percentile(dist,10)
-print("Threshold value: ", t)
+    # Find the maximum average similarity between all clusters
+    print("\nHighest similarity value: ", np.max(sim_mat))
 
-# 3. Cluster assignment - seq through the active site sequences and cluster
-# based on similarity and threshold cutoff
-clusters = defaultdict(list)
-for site in active_sites:
-    assigned = False
-    #print("\n\nAssigning %r to a cluster..." %site.name)
+    # For each row in the similarity matrix, select the index of max similarity
+    # Note: if more than two clusters share the same max similarity, only the first is chosen
+    # (this algorithm is subject to produce different results based on initial conditions)
 
-    # try to assign to an existing cluster
-    for c in clusters:
-        #print("Key: ",c)
+    # Decay this into the x and y axes, which will be the indexes to combine in clusters - looks good
+    print("Focal index: ", np.argmax(sim_mat))
+    row = np.argmax(sim_mat) // len(clusters)
+    column = np.argmax(sim_mat) % len(clusters)
+    print("Clusters to combine: %d, %d" %(row, column))
 
-        #print("Type of cluster object: ", type(clusters[c]))
-        #print("Type of key: ", type(c))
+    # Update the clustering such that the row-th and column-th cluster are combined
+    new_cluster = []
+    new_cluster.append(clusters[row])
+    new_cluster.append(clusters[column])
+    new_cluster = [item for sublist in new_cluster for item in sublist]
+    for i in sorted([row, column], reverse=True):
+        del clusters[i]
+    print("New cluster: ", new_cluster)
 
-        # Find distribution of pairwise distances between already-assigned sites to the query site
-        sim_dist = []
-        for seen_site in clusters[c]:
-            sim_dist.append(compute_similarity(site, seen_site))
+    # Update the similarity matrix
+    # remove rows & columns of index row, column
+    for i in sorted([row, column], reverse=True):
+        sim_mat = np.delete(sim_mat, i, 0)
+        sim_mat = np.delete(sim_mat, i, 1)
 
-        # If median similarity of the query sequence is greater than the threshold
-        # cutoff, add it to the cluster; else restart the loop
-        #print("Median distance between %r and cluster %r: %r" %(site.name, c, np.median(sim_dist)))
-        if (np.median(sim_dist) >= t):
-            clusters[c].append(site)
-            assigned = True
-            break
-            #print("Assigned to cluster %r.\n" %c)
-        else:
-            continue
+    # append new row & column to end of new cluster
+    sim_mat_row = []
+    for cluster in clusters:
 
-    # If the site wasn't assigned, create a new cluster with the site
-    if (assigned == False):
-        c = len(clusters) + 1
-        #print("Creating new cluster %r.\n" %c)
-        clusters[c].append(site)
+        print("current focal comparison cluster: ", cluster)
 
-# Now check that metrics.py is working right
-clustering = seq_scan(active_sites, defaultdict(list), t) # success!
+        # calculate the average distance between this cluster and every other cluster
+        avg_sim = []
+        for site_a in list(cluster):
+            sims = [] # holds the new-cluster similarity scores for site_a
+            for site_b in new_cluster:
+                print("Sites: ", site_a, " ", site_b)
+                sims.append(compute_similarity(site_a, site_b)) # equals similarity between sites a and b
+            avg_sim.append(sum(sims)/len(sims)) # equals average similarity between site a and all sites in new cluster
+        sim_mat_row.append(sum(avg_sim)/len(avg_sim)) #equals average similarity between all sites in old cluster and all sites in new cluster
 
-print("Here's what came out of native code: ", clusters)
-print("Here's what came out of the function: ", clustering)
+    # Append the new similarities to the similarity matrix
+    np_row = np.array([sim_mat_row])
 
-# Find the smallest 10% of clusters
-size_dist = []
-for cluster, sites in clustering.items():
-    print("Number of sites in cluster %r: %r" %(cluster, len(sites)))
-    size_dist.append(len(sites))
+    # Append new column and row
+    print("Shape of vector: ", np_row.shape)
+    print("Shape of matrix: ", sim_mat.shape)
 
-#small_t = np.percentile(dist,10)
-small_t = 100
-#smalls = [cluster if len(sites) <= small_t for cluster, sites in clustering.items()]
-small_list = list([ cluster for cluster, sites in clustering.items() if len(sites) <= small_t])
-print("Clusters containing fewer than %r sites will be re-examined." %small_t)
-print("The following clusters will be re-examined: ", small_list)
+    sim_mat = np.concatenate((sim_mat,np_row), axis=0)
+    np_row = np.append(np_row,0)
+    print("New shape of matrix: ", sim_mat.shape)
+    print("New shape of vector: ", np_row[:, None].shape)
+    sim_mat = np.concatenate((sim_mat,np_row[:, None]), axis=1)
 
-# Extract sites from smallest clusters
-small_sites = []
-for small_c in small_list: #grabs cluster
-    for active_site in clustering[small_c]: #grabs each active site in the cluster
-         small_sites.append(active_site)
-         print("Adding ActiveSite %r to list of sites to re-run." %active_site)
+    print("New shape of matrix: ", sim_mat.shape)
 
-print("List of ActiveSites to rerun: ", small_sites)
+    # Append the new clustering to the clusterings list & score
+    clusters.append(new_cluster)
+    print("\nClusters being appended into clusterings: ", clusters)
+    clusterings.append(clusters)
 
-# Remove smallest clusters from clustering - create new dict with only big_clusters
-big_dict = defaultdict(list,{cluster: sites for cluster, sites in clustering.items()
-             if cluster not in small_list})
-big_clusters = list(set(clustering)^set(small_list))
+    print("\nInput into calc_silhouette: ", clusters)
+    #scores.append(calc_silhouette(clusters))
 
-print("Big clusters: ", big_clusters)
-print("Big dict: ", big_dict)
-
-# Rerun through sequence scan, try to reassign these active sites
-final_clustering = seq_scan(small_sites, big_dict, t)
-# Recreate as a list of lists
-final_clust_list = list([sites for cluster, sites in final_clustering.items()])
-# # # # # # # # SUBSET OF PARTITION FUNCTION # # # # # # # #
-
-# Does the __main__ function match with the .cluster function?
-clustering = cluster_by_partitioning(active_sites)
-print("Here's what came out of native code: ", final_clust_list)
-print("Here's what came out of the function: ", clustering)
-
-
-# Assess clustering using silhouette score
-print("Silhouette score for native code: ", calc_silhouette(final_clust_list))
-print("Silhouette score for function: ", calc_silhouette(clustering))
+#####BUG#### issue: list is a list of lists - how to devolve?

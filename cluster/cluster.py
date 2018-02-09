@@ -80,19 +80,28 @@ def cluster_hierarchically(active_sites):
     # Average Linkage clustering, an agglomerative method
     #https://home.deib.polimi.it/matteucc/Clustering/tutorial_html/hierarchical.html
 
-    # Get list of names of active sites
+    # Assign each site to its own cluster
+    clusters = []
+    sim_mat = np.zeros((len(clusters),len(clusters)))
+
+    for site_a, i in enumerate(active_sites):
+        clusters[i] = list(site_a)
+
+        # Calculate the similarity between each "cluster"
+        for site_b, j in enumerate(active_sites):
+            sim_mat[i,j] = compute_similarity(site_a, site_b)
+
+    # Print preliminary clustering and similarity matrix
+    print("Initial clusters (should be every ActiveSite for himself): ", clusters)
+    print("")
 
 
-    # 1. Calculate pairwise similarity for all active sites
-    mat = []
-    for site_i in active_sites:
-        j = []
-        for site_j in active_sites:
-            sim = compute_similarity(site_i, site_j)
-            j.append(sim)
-        mat.append(j)
+    # While there are more than one clusters, iteratively add the most similar clusters
+    while len(clusters) > 1:
 
-    # 2. Find the most-similar pair in the matrix
+        # Find the minimum average distance between all clusters
+        np.matrix()
+
 
 
     return clustering
