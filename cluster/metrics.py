@@ -123,6 +123,7 @@ def compute_similarity(site_a, site_b):
     Output: the similarity between them (a floating point number)
     """
 
+    # # # # # # # # # # # # JACCARD SIMILARITY # # # # # # # # # # # #
     similarity = 0.0
 
     # Only keep the residue names, not their numbers
@@ -130,15 +131,13 @@ def compute_similarity(site_a, site_b):
     b_residues = [str(x).split(' ')[0] for x in site_b.residues]
 
     # Simple Jaccard similarity
-    intersection = set.intersection(*[set(a_residues), set(b_residues)])
-    union = set.union(*[set(a_residues), set(b_residues)])
-
-    # Hard-code BLOSUM matrix to penalize the appearance of x instead of y
-    #BLOSUM = {}
-
-    similarity = len(intersection)/len(union)
+    intersection_cardinality = len(set.intersection(*[set(a_residues), set(b_residues)]))
+    union_cardinality = len(set.union(*[set(a_residues), set(b_residues)]))
+    similarity = intersection_cardinality/float(union_cardinality)
 
     return similarity
+
+    # # # # # # # # # # # # CHARGE/SIZE SIMILARITY # # # # # # # # # # # #
 
 def update_sim(clusters, new_cluster, sim_mat):
     """

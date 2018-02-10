@@ -4,7 +4,7 @@ from collections import defaultdict
 import random
 import numpy as np
 
-def cluster_by_partitioning(active_sites):
+def cluster_by_partitioning(active_sites):#, p):
     """
     Cluster a given set of ActiveSite instances using a partitioning method.
 
@@ -13,6 +13,9 @@ def cluster_by_partitioning(active_sites):
             (this is really a list of clusters, each of which is list of
             ActiveSite instances)
     """
+
+    p = 15.0 # Predetermined "ideal percentile cutoff" for this dataset
+
     # Covering algorithm - modified from Threshold Bootstrap, Prosperi et al. 2010
     # (no bootstrapping of aligned residues)
 
@@ -34,7 +37,7 @@ def cluster_by_partitioning(active_sites):
         dist.append(sim)
 
     # calculate threshold distance value (lower 10th percentile of similarity distribution)
-    t = np.percentile(dist,10)
+    t = np.percentile(dist,p)
 
     # 3. Cluster assignment - seq through the active site sequences and cluster
     # based on similarity and threshold cutoff
@@ -136,4 +139,9 @@ def cluster_hierarchically(active_sites):
     # Only return cluster with highest silhouette score - choosing most "divisive" (first seen with max value)
     scores.index(max(scores))
 
-    return clusterings[scores.index(max(scores))]
+    return clusterings#[scores.index(max(scores))] #uncomment to observe highest-scoring clustering (most numerous)
+
+    # Comment 142 and Uncomment below to observe biggest highest-scoring clusters
+    #rev_clust = list(reversed(clusterings))
+    #rev_score = list(reversed(scores))
+    #return rev_clust[rev_score.index(max(rev_score))]

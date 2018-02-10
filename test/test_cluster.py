@@ -1,6 +1,7 @@
-from hw2skeleton import cluster
-from hw2skeleton import io
+from cluster import cluster
+from cluster import io
 import os
+import random
 
 def test_similarity():
     filename_a = os.path.join("data", "276.pdb")
@@ -10,7 +11,10 @@ def test_similarity():
     activesite_b = io.read_active_site(filename_b)
 
     # update this assertion
-    assert cluster.compute_similarity(activesite_a, activesite_b) == 0.0
+    assert cluster.compute_similarity(activesite_a, activesite_b) == float(1/8)
+
+    # Calculation: number in common = {His Asp} vs {Asp Thr Arg Ser Lys Tyr Asn}
+    # Common = 1, Total unique = 8
 
 def test_partition_clustering():
     # tractable subset
@@ -21,8 +25,12 @@ def test_partition_clustering():
         filepath = os.path.join("data", "%i.pdb"%id)
         active_sites.append(io.read_active_site(filepath))
 
+    # Since covering algorithm is subject to initial conditions, set random seed
+    random.seed(1)
+
     # update this assertion
-    assert cluster.cluster_by_partitioning(active_sites) == []
+    assert cluster.cluster_by_partitioning(active_sites) == [[4629, 10701, 276]]
+
 
 def test_hierarchical_clustering():
     # tractable subset
@@ -34,4 +42,4 @@ def test_hierarchical_clustering():
         active_sites.append(io.read_active_site(filepath))
 
     # update this assertion
-    assert cluster.cluster_hierarchically(active_sites) == []
+    assert cluster.cluster_hierarchically(active_sites) == [[[276], [4629, 10701]], [[276, 4629, 10701]]]
