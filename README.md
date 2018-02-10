@@ -1,4 +1,4 @@
-# HW2 Skeleton
+# Cluster
 
 [![Build
 Status](https://travis-ci.org/mepittma/bmi203-2.svg?branch=master)](https://travis-ci.org/mepittma/bmi203-2)
@@ -22,7 +22,7 @@ The main file that you will need to modify is `cluster.py` and the corresponding
 ├── README.md
 ├── data
 │   ...
-├── hw2skeleton
+├── cluster
 │   ├── __init__.py
 │   ├── __main__.py
 │   ├── cluster.py
