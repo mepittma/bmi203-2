@@ -66,7 +66,7 @@ def cluster_by_partitioning(active_sites):#, p):
     # Rerun through sequence scan, try to reassign these active sites
     final_clustering = seq_scan(small_sites, big_dict, t)
     # Recreate as a list of lists
-    final_clust_list = list([sites for cluster, sites in final_clustering.items()])
+    final_clust_list = [sites for cluster, sites in final_clustering.items()]
 
     return final_clust_list
 

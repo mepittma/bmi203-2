@@ -40,6 +40,10 @@ class ActiveSite:
     def __repr__(self):
         return self.name
 
+    # Create __eq__ so my tests will pass -.-
+    def __eq__ (self, other):
+        return self.name == other.name
+
 class Cluster:
     """
     A simple class for a cluster

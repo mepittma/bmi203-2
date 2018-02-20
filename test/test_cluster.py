@@ -1,5 +1,6 @@
 from cluster import cluster
 from cluster import io
+from cluster import utils
 import os
 import random
 
@@ -29,8 +30,7 @@ def test_partition_clustering():
     random.seed(1)
 
     # update this assertion
-    assert cluster.cluster_by_partitioning(active_sites) == [[4629, 10701, 276]]
-
+    assert cluster.cluster_by_partitioning(active_sites) == [[utils.ActiveSite("4629"),utils.ActiveSite("10701"),utils.ActiveSite("276")]]
 
 def test_hierarchical_clustering():
     # tractable subset
@@ -42,4 +42,4 @@ def test_hierarchical_clustering():
         active_sites.append(io.read_active_site(filepath))
 
     # update this assertion
-    assert cluster.cluster_hierarchically(active_sites) == [[[276], [4629, 10701]], [[276, 4629, 10701]]]
+    assert cluster.cluster_hierarchically(active_sites) == [[[utils.ActiveSite("276")], [utils.ActiveSite("4629"), utils.ActiveSite("10701")]], [[utils.ActiveSite("276"), utils.ActiveSite("4629"), utils.ActiveSite("10701")]]]
